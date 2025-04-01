@@ -62,7 +62,7 @@ nEpochs: 50
 save_epoch: 1
 manualSeed: 1024
 save_ckpt: true
-pretrained: true            # 백본 pretrained 로드 여부
+pretrained: false           # 백본 pretrained 로드 여부
 use_amp: true               # AMP 사용 여부 (mixed precision)
 
 # loss

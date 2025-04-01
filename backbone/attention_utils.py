@@ -53,3 +53,15 @@ def apply_attention_mask(features, attention_scores, mode='mul'):
         return features * norm_scores.unsqueeze(-1)
     else:
         raise ValueError(f"[apply_attention_mask] Unknown mode: {mode}")
+
+def apply_attention_weights(features, attention_scores):
+    """
+    features: Tensor of shape (B, N, D)
+    attention_scores: Tensor of shape (B, N) or (B, N, 1)
+
+    Returns:
+        Weighted features: (B, N, D)
+    """
+    if attention_scores.dim() == 2:
+        attention_scores = attention_scores.unsqueeze(-1)  # (B, N, 1)
+    return features * attention_scores  # broadcasting

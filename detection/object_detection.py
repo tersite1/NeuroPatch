@@ -5,7 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from backbone.vit_patch_vgg_lif import PatchVGGWithLIF
 from detection.object_detection_module import DetectionHead
-from backbone.attention_utils import lif_to_binary_attention, apply_attention_mask
+from backbone.attention_utils import lif_to_attention, apply_attention_weights
 
 class NeuroPatchDetector(nn.Module):
     def __init__(self, num_classes=10, img_size=224, patch_size=16):

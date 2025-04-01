@@ -27,3 +27,13 @@ class NeuroPatchSegmentor(nn.Module):
 
         seg_logits = self.seg_head(patch_feats)  # (B, C, H, W)
         return seg_logits
+
+import torch.nn as nn
+
+class SimpleSegmentationLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.criterion = nn.CrossEntropyLoss()
+
+    def forward(self, pred, target):
+        return self.criterion(pred, target)
