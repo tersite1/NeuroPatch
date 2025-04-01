@@ -1,0 +1,65 @@
+# log
+log_dir: ./logs
+
+# backbone 설정
+backbone_config:
+  num_classes: 10
+  patch_size: 16
+  img_size: 224
+  embed_dim: 768
+  dropout: false
+
+# dataset
+train_batchSize: 16
+test_batchSize: 16
+workers: 4
+resolution: 224
+
+# data augmentation
+use_data_augmentation: true
+data_aug:
+  flip_prob: 0.5
+  rotate_prob: 0.5
+  rotate_limit: [-10, 10]
+  blur_prob: 0.5
+  blur_limit: [3, 7]
+  brightness_prob: 0.5
+  brightness_limit: [-0.1, 0.1]
+  contrast_limit: [-0.1, 0.1]
+  quality_lower: 40
+  quality_upper: 100
+
+# normalization
+mean: [0.485, 0.456, 0.406]
+std: [0.229, 0.224, 0.225]
+
+# optimizer
+optimizer:
+  type: adam
+  adam:
+    lr: 0.0002
+    beta1: 0.9
+    beta2: 0.999
+    eps: 0.00000001
+    weight_decay: 0.0005
+    amsgrad: false
+  sgd:
+    lr: 0.0002
+    momentum: 0.9
+    weight_decay: 0.0005
+
+# training
+lr_scheduler: step
+lr_step: 3
+lr_gamma: 0.4
+nEpochs: 50
+save_epoch: 1
+manualSeed: 1024
+save_ckpt: true
+
+# loss
+loss_func: cross_entropy
+
+# cuda
+cuda: true
+cudnn: true
