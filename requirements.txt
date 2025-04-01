@@ -1,0 +1,9 @@
+torch
+transformers==4.25.1
+spikingjelly
+torchvision
+tqdm
+numpy
+pillow
+scikit-learn
+PyYAML

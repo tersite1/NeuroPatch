@@ -1,15 +1,10 @@
-# log
+# logging
 log_dir: ./logs
-
-# backbone 설정
-backbone_config:
-  num_classes: 10
-  patch_size: 16
-  img_size: 224
-  embed_dim: 768
-  dropout: false
+use_neptune: true         # Neptune 사용 여부
+experiment_name: STRAW    # Neptune 프로젝트 내 실험 이름
 
 # dataset
+data_path: ./data         # 데이터 경로
 train_batchSize: 16
 test_batchSize: 16
 workers: 4
@@ -21,7 +16,7 @@ data_aug:
   flip_prob: 0.5
   rotate_prob: 0.5
   rotate_limit: [-10, 10]
-  blur_prob: 0.5
+  blur_prob: 0.3
   blur_limit: [3, 7]
   brightness_prob: 0.5
   brightness_limit: [-0.1, 0.1]
@@ -33,14 +28,23 @@ data_aug:
 mean: [0.485, 0.456, 0.406]
 std: [0.229, 0.224, 0.225]
 
+# backbone 설정
+backbone_config:
+  type: convnext_tiny                   # [vgg, resnet18, efficientnet_b0, convnext_tiny]
+  patch_size: 16
+  img_size: 224
+  embed_dim: 768
+  num_classes: 10
+  dropout: false
+
 # optimizer
 optimizer:
-  type: adam
+  type: adam                 # [adam, sgd]
   adam:
     lr: 0.0002
     beta1: 0.9
     beta2: 0.999
-    eps: 0.00000001
+    eps: 1e-8
     weight_decay: 0.0005
     amsgrad: false
   sgd:
@@ -48,14 +52,18 @@ optimizer:
     momentum: 0.9
     weight_decay: 0.0005
 
+# scheduler
+lr_scheduler: step          # [step, cosine]
+lr_step: 5
+lr_gamma: 0.5
+
 # training
-lr_scheduler: step
-lr_step: 3
-lr_gamma: 0.4
 nEpochs: 50
 save_epoch: 1
 manualSeed: 1024
 save_ckpt: true
+pretrained: true            # 백본 pretrained 로드 여부
+use_amp: true               # AMP 사용 여부 (mixed precision)
 
 # loss
 loss_func: cross_entropy

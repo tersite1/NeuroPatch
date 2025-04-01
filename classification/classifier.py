@@ -1,36 +1,34 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from backbone.vit_patch_vgg_lif import PatchVGGWithLIF
+
 from backbone.attention_utils import lif_to_binary_attention, apply_attention_mask
 
 class NeuroPatchClassifier(nn.Module):
-    def __init__(self, num_classes=10, img_size=224, patch_size=16):
+    def __init__(self, num_classes=10, backbone=None):
         super().__init__()
-        # 1) 백본
-        self.backbone = PatchVGGWithLIF(img_size=img_size, patch_size=patch_size)
+        assert backbone is not None, "Backbone model must be provided"
+        self.backbone = backbone  # 예: PatchVGGWithLIF or ResNet 기반 등
 
-        # 2) 최종 분류기
-        #    (B, N, D) → (B, D) [global pooling] → (B, num_classes)
-        self.pool = nn.AdaptiveAvgPool1d(1)  # patch dimension pooling
+        # Fully connected FFNN after masked patch features
         self.classifier = nn.Sequential(
-            nn.Linear(self.backbone.embed_dim, num_classes)
+            nn.Linear(self.backbone.embed_dim, 256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.3),
+            nn.Linear(256, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.3),
+            nn.Linear(128, num_classes)
         )
 
-    def forward(self, x):
-        # 1) backbone → (B, N, D)
-        patch_feats = self.backbone(x)
+        self.pool = nn.AdaptiveAvgPool1d(1)
 
-        # 2) LIF-based attention
-        binary_attention = lif_to_binary_attention(patch_feats) 
+    def forward(self, x):
+        patch_feats = self.backbone(x)                            # (B, N, D)
+        binary_attention = lif_to_binary_attention(patch_feats)  # (B, N)
         masked_feats = apply_attention_mask(patch_feats, binary_attention)  # (B, N, D)
 
-        # 3) pooling: (B, N, D) → (B, D)
-        #    transpose => (B, D, N) → adaptive pool => (B, D, 1) => squeeze => (B, D)
-        masked_feats = masked_feats.transpose(1,2)   # (B, D, N)
-        pooled = self.pool(masked_feats)             # (B, D, 1)
-        pooled = pooled.squeeze(-1)                  # (B, D)
-
-        # 4) classification
-        logits = self.classifier(pooled)             # (B, num_classes)
+        masked_feats = masked_feats.transpose(1, 2)  # (B, D, N)
+        pooled = self.pool(masked_feats).squeeze(-1) # (B, D)
+        logits = self.classifier(pooled)              # (B, num_classes)
         return logits

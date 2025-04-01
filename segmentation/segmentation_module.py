@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from module.aspp import ASPP
 
 class ResidualConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -41,12 +42,14 @@ class SegmentationHead(nn.Module):
         self.patch_grid = patch_grid
         self.embed_dim = embed_dim
 
-        # Initial reshape conv
         self.initial = ResidualConvBlock(embed_dim, embed_dim // 2)
         self.down1 = ResidualConvBlock(embed_dim // 2, embed_dim // 4)
         self.down2 = ResidualConvBlock(embed_dim // 4, embed_dim // 4)
 
         self.fusion = MultiScaleFusionBlock(embed_dim // 4)
+
+        # ASPP 모듈 추가
+        self.aspp = ASPP(in_channels=embed_dim // 4, out_channels=embed_dim // 4)
 
         self.final_conv = nn.Sequential(
             nn.Conv2d(embed_dim // 4, embed_dim // 4, kernel_size=3, padding=1),
@@ -56,7 +59,6 @@ class SegmentationHead(nn.Module):
         )
 
     def forward(self, x):
-        # x: (B, N, D)
         B, N, D = x.shape
         H_p, W_p = self.patch_grid
         assert N == H_p * W_p, "Patch count doesn't match grid size"
@@ -67,6 +69,7 @@ class SegmentationHead(nn.Module):
         x = self.down1(x)          # (B, D/4, 2H_p, 2W_p)
         x = self.down2(x)          # (B, D/4, 2H_p, 2W_p)
         x = self.fusion(x)         # Multi-scale context
+        x = self.aspp(x)           # ASPP 적용
         x = F.interpolate(x, scale_factor=4, mode='bilinear', align_corners=False)
         x = self.final_conv(x)     # (B, num_classes, H, W)
         return x
